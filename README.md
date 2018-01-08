@@ -49,14 +49,14 @@ see https://github.com/matthew-andrews/isomorphic-fetch
 
 # Related projects
 
-* https://github.com/rvagg/through2
-* https://github.com/dominictarr/event-stream
-* https://github.com/ZJONSSON/streamz
-* https://github.com/ZJONSSON/etl
-* https://github.com/chbrown/streaming
+* https://github.com/Rob--W/proxy-from-env
+* https://github.com/marionebl/omni-fetch
+* https://github.com/kevva/caw
+
+
 
 
 # License
 
-[MIT/X11](https://github.com/touv/node-ezs/blob/master/LICENSE)
+[MIT/X11](https://github.com/touv/node-fetch-with-proxy/blob/master/LICENSE)
 
