@@ -46,6 +46,7 @@
     "isomorphic-fetch": "^2.2.1"
   },
   "dependencies": {
+    "proxy-from-env": "^1.0.0",
     "tunnel-agent": "^0.6.0"
   }
 }

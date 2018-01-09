@@ -1,6 +1,7 @@
 import { parse } from 'url';
 import isoFetch from 'isomorphic-fetch';
 import tunnelAgent from 'tunnel-agent';
+import { getProxyForUrl } from 'proxy-from-env';
 import util from 'util';
 
 const debug = util.debuglog('fetch');
@@ -11,14 +12,10 @@ function getProxy(url) {
 
     const urlObject = parse(url);
     const urlProtocol = urlObject.protocol.replace(':', '');
-    const envNames = [
-        `${urlProtocol}_proxy`,
-        `${urlProtocol}_proxy`.toUpperCase()
-    ];
 
-    const envFound = envNames.find(envName => process.env[envName]);
 
-    if (!envFound) {
+    const proxyUrl = getProxyForUrl(url);
+    if (!proxyUrl) {
         debug('use no proxy');
         return {
             proxy: null,
@@ -27,9 +24,9 @@ function getProxy(url) {
         }
     }
 
-    debug('proxy %s', process.env[envFound]);
+    debug('proxy %s', proxyUrl);
 
-    const proxyObject = parse(process.env[envFound]);
+    const proxyObject = parse(proxyUrl || '');
     const proxyProtocol = proxyObject.protocol.replace(':', '');
     const proxyPort = proxyObject.port || (proxyProtocol === 'https' ? 443 : 80);
     proxyObject.port = proxyPort;
@@ -54,7 +51,7 @@ function fetch(url, options = {}) {
     const { proxy, target, method } = getProxy(url);
 
     if (method === 'noProxy' || options.agent) {
-        return isoFetch(target, options);
+        return isoFetch(url, options);
     }
 
     // https://github.com/request/request/blob/b12a6245d9acdb1e13c6486d427801e123fdafae/lib/tunnel.js#L124-L130

@@ -40,7 +40,9 @@ Use [mocha](https://github.com/visionmedia/mocha) to run the tests.
   * HTTP_PROXY
   * http_proxy
   * HTTPS_PROXY
-  * http_proxy
+  * https_proxy
+  * ALL_PROXY
+  * NO_PROXY
 
 # API Documentation
 
@@ -49,7 +51,6 @@ see https://github.com/matthew-andrews/isomorphic-fetch
 
 # Related projects
 
-* https://github.com/Rob--W/proxy-from-env
 * https://github.com/marionebl/omni-fetch
 * https://github.com/kevva/caw
 
