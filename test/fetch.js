@@ -15,19 +15,6 @@ describe('try fetch', () => {
             .catch(done);
     });
 
-    it('http url with path', (done) => {
-        const url = 'http://www.cnrs.fr/fr/recherche/index.htm';
-        fetch(url)
-            .then(function (response) {
-                return response.status;
-            })
-            .then((code) => {
-                assert.equal(code, 200);
-                done();
-            })
-            .catch(done);
-    });
-
     it('https url', (done) => {
         const url = 'https://www.google.fr/';
         fetch(url)
@@ -52,5 +39,22 @@ describe('try fetch', () => {
                 done();
             })
             .catch(done);
+    });
+
+    it('https url with path & NO_PROXY', (done) => {
+        process.env.HTTPS_PROXY = 'exemple.com:8080';
+        process.env.NO_PROXY = 'nodejs.org';
+
+        const url = 'https://nodejs.org/api/http.html';
+        fetch(url)
+            .then(function (response) {
+                return response.status;
+            })
+            .then((code) => {
+                assert.equal(code, 200);
+                done();
+            })
+            .catch(done);
     })
+
 });
