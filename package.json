@@ -42,11 +42,9 @@
     "eslint-plugin-import": "^2.2.0",
     "mocha": "^8.0.1"
   },
-  "peerDependencies": {
-    "cross-fetch": "^3.0.5"
-  },
   "dependencies": {
     "proxy-from-env": "^1.0.0",
-    "tunnel-agent": "^0.6.0"
+    "tunnel-agent": "^0.6.0",
+    "cross-fetch": "^3.0.5"
   }
 }
