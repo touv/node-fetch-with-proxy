@@ -1,6 +1,6 @@
 {
   "name": "fetch-with-proxy",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Wrap isomorphic fetch to enable proxy use.",
   "directories": {
     "test": "test"
