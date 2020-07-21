@@ -1,3 +1,3 @@
-import fetch from 'isomorphic-fetch';
+import fetch from 'cross-fetch';
 
 export default fetch;

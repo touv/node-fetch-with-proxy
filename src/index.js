@@ -1,5 +1,5 @@
 import { parse } from 'url';
-import isoFetch from 'isomorphic-fetch';
+import isoFetch from 'cross-fetch';
 import tunnelAgent from 'tunnel-agent';
 import { getProxyForUrl } from 'proxy-from-env';
 import util from 'util';

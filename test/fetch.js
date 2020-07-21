@@ -1,15 +1,22 @@
+const http = require('http');
 const assert = require('assert');
 const fetch = require('../lib/index.js').default;
 
 describe('try fetch', () => {
     it('http url', (done) => {
-        const url = 'http://data.bnf.fr';
+        const server = http.createServer(function(req, res) {
+            res.writeHead(200);
+            res.end('Salut tout le monde !');
+        });
+        server.listen(55555);
+        const url = 'http://127.0.0.1:55555';
         fetch(url)
             .then(function (response) {
                 return response.status;
             })
             .then((code) => {
                 assert.equal(code, 200);
+                server.close();
                 done();
             })
             .catch(done);
