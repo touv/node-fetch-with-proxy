@@ -43,7 +43,7 @@
     "mocha": "^8.2.1"
   },
   "dependencies": {
-    "better-https-proxy-agent": "^1.0.8",
-    "proxy-from-env": "^1.1.0"
+    "proxy-from-env": "^1.1.0",
+    "tunnel-agent": "^0.6.0"
   }
 }
