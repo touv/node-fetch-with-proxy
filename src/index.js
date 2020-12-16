@@ -64,14 +64,8 @@ export default function fetch(url, options) {
     const opts = options || {};
     const AgentOptions = selectAgentOptions(opts);
     const parsedURL = parse(url);
-
-    if (opts.signal) {
-        opts.signal.addEventListener('abort', () => {
-            agent.destroy();
-            agent = null;
-        });
-    }
     const proxyurl = getProxyForUrl(parsedURL.href);
+    let agent;
     if (proxyurl) {
         const parsedProxyURL = parseProxy(parsedURL, proxyurl);
         if (parsedProxyURL.tunnelMethod.startsWith('httpOver')) {
@@ -83,18 +77,21 @@ export default function fetch(url, options) {
             parsedURL.host = proxyurl.host;
             parsedURL.hostname = proxy.hostname;
             parsedURL.auth = proxy.auth;
-            return nodeFetch(parsedURL, {
-                ...options,
-                agent: chooseAgent(target, AgentOptions),
-            });
+            agent = chooseAgent(target, AgentOptions);
+        } else {
+            agent = buildTunnel(parsedProxyURL, AgentOptions) || chooseAgent(parsedURL, AgentOptions);
         }
-        return nodeFetch(parsedURL, {
-            ...options,
-            agent: buildTunnel(parsedProxyURL, AgentOptions) || chooseAgent(parsedURL, AgentOptions),
+    } else {
+        agent = chooseAgent(parsedURL, AgentOptions);
+    }
+    if (opts.signal) {
+        opts.signal.addEventListener('abort', () => {
+            agent.destroy();
+            agent = null;
         });
     }
     return nodeFetch(parsedURL, {
         ...options,
-        agent: chooseAgent(parsedURL, AgentOptions),
+        agent,
     });
 }
