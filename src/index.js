@@ -1,90 +1,105 @@
-import { parse } from 'url';
-import isoFetch from 'cross-fetch';
-import tunnelAgent from 'tunnel-agent';
+import nodeFetch from 'node-fetch';
 import { getProxyForUrl } from 'proxy-from-env';
-import util from 'util';
-
-const debug = util.debuglog('fetch');
-
-function getProxy(url) {
-
-    debug('fetch %s', url);
-
-    const urlObject = parse(url);
-    const urlProtocol = urlObject.protocol.replace(':', '');
+import { parse } from 'url';
+import http from 'http';
+import https from 'https';
+import tunnelAgent from 'tunnel-agent';
+import AbortController from 'node-abort-controller'
+ 
 
 
-    const proxyUrl = getProxyForUrl(url);
-    if (!proxyUrl) {
-        debug('use no proxy');
-        return {
-            proxy: null,
-            url: null,
-            method: 'noProxy',
-        }
-    }
+const DefaultOptions = {
+    keepAlive: true,
+    timeout: 1000,
+    keepAliveMsecs: 500,
+    maxSockets: 200,
+    maxFreeSockets: 5,
+    maxCachedSessions: 500,
+};
 
-    debug('proxy %s', proxyUrl);
+const selectAgentOptions = (options) => {
+    const {
+        keepAlive,
+        timeout,
+        keepAliveMsecs,
+        maxSockets,
+        maxFreeSockets,
+        maxCachedSessions,
+    } = { ...DefaultOptions, ...options };
+    return {
+        keepAlive,
+        timeout,
+        keepAliveMsecs,
+        maxSockets,
+        maxFreeSockets,
+        maxCachedSessions,
+    };
+};
 
-    const proxyObject = parse(proxyUrl || '');
+const capitalizeFirstLetter = (string) =>
+    string.charAt(0).toUpperCase().concat(string.slice(1));
+
+const parseProxy = (url, proxyurl) => {
+    const proxyObject = parse(proxyurl || '');
     const proxyProtocol = proxyObject.protocol.replace(':', '');
     const proxyPort = proxyObject.port || (proxyProtocol === 'https' ? 443 : 80);
     proxyObject.port = proxyPort;
-    const tunnelMethod = urlProtocol
+    proxyObject.tunnelMethod = url.protocol.replace(':', '')
         .concat('Over')
         .concat(capitalizeFirstLetter(proxyProtocol));
-
-    debug('method %s', tunnelMethod);
-    return {
-        proxy: proxyObject,
-        target: urlObject,
-        method : tunnelMethod,
-    }
+    return proxyObject;
 }
 
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
+const chooseAgent = (url, options) => (
+    url.protocol === 'https:' ? new https.Agent(options) : new http.Agent(options)
+);
 
-function fetch(url, options = {}) {
+const buildTunnel = (proxy, options) => tunnelAgent[proxy.tunnelMethod]({
+    ...options,
+    proxy: {
+        port: proxy.port,
+        host: proxy.hostname,
+        proxyAuth: proxy.auth,
+    }});
 
-    const { proxy, target, method } = getProxy(url);
 
-    if (method === 'noProxy' || options.agent) {
-        return isoFetch(url, options);
-    }
-
-    // https://github.com/request/request/blob/b12a6245d9acdb1e13c6486d427801e123fdafae/lib/tunnel.js#L124-L130
-    if (method.startsWith('httpOver')) {
-        target.path = target.protocol
-            .concat('//')
-            .concat(target.host)
-            .concat(target.path);
-        target.port = proxy.port;
-        target.host = proxy.host;
-        target.hostname = proxy.hostname;
-        target.auth = proxy.auth;
-        debug('request with no tunnel');
-        return isoFetch(target, {
-            ...options,
-        });
-    }
-
-    debug('request with tunnel');
-    const tunnel = tunnelAgent[method](Object.assign({
-        proxy: {
-            port: proxy.port,
-            host: proxy.hostname,
-            proxyAuth: proxy.auth
+export default function fetch(url, options) {
+    const opts = options || {};
+    const AgentOptions = selectAgentOptions(opts);
+    const parsedURL = parse(url);
+    const proxyurl = getProxyForUrl(parsedURL.href);
+    let agent;
+    if (proxyurl) {
+        const parsedProxyURL = parseProxy(parsedURL, proxyurl);
+        if (parsedProxyURL.tunnelMethod.startsWith('httpOver')) {
+            parsedURL.path = parsedURL.protocol
+                .concat('//')
+                .concat(parsedURL.host)
+                .concat(parsedURL.path);
+            parsedURL.port = parsedProxyURL.port;
+            parsedURL.host = parsedProxyURL.host;
+            parsedURL.hostname = parsedProxyURL.hostname;
+            parsedURL.auth = parsedProxyURL.auth;
+            agent = chooseAgent(parsedURL, AgentOptions);
+        } else {
+            agent = buildTunnel(parsedProxyURL, AgentOptions) || chooseAgent(parsedURL, AgentOptions);
         }
-    }));
-    const agent = tunnel ? {agent : tunnel} : {};
+    } else {
+        agent = chooseAgent(parsedURL, AgentOptions);
+    }
+    if (!opts.signal) {
+        const controller = new AbortController();
+        opts.signal = controller.signal;
+    }
+    opts.signal.addEventListener('abort', () => {
+	if (agent.destroy) {
+        	agent.destroy();
+	}
+        agent = null;
+    });
 
-    return isoFetch(url, {
+    return nodeFetch(parsedURL, {
         ...options,
-        ...agent,
+        agent,
     });
 }
-
-fetch.default = fetch;
-export default fetch;
