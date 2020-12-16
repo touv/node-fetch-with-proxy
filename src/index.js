@@ -36,12 +36,12 @@ const selectAgentOptions = (options) => {
 const capitalizeFirstLetter = (string) =>
     string.charAt(0).toUpperCase().concat(string.slice(1));
 
-const parseProxy = (proxyurl) => {
-    const proxyObject = parse(proxyUrl || '');
+const parseProxy = (url, proxyurl) => {
+    const proxyObject = parse(proxyurl || '');
     const proxyProtocol = proxyObject.protocol.replace(':', '');
     const proxyPort = proxyObject.port || (proxyProtocol === 'https' ? 443 : 80);
     proxyObject.port = proxyPort;
-    proxyObject.tunnelMethod = urlProtocol
+    proxyObject.tunnelMethod = url.protocol.replace(':', '')
         .concat('Over')
         .concat(capitalizeFirstLetter(proxyProtocol));
     return proxyObject;
@@ -73,8 +73,8 @@ export default function fetch(url, options) {
     }
     const proxyurl = getProxyForUrl(parsedURL.href);
     if (proxyurl) {
-        const proxyRequestOptions = parseProxy(proxyurl);
-        if (proxyRequestOptions.tunnelMethod.startsWith('httpOver')) {
+        const parsedProxyURL = parseProxy(parsedURL, proxyurl);
+        if (parsedProxyURL.tunnelMethod.startsWith('httpOver')) {
             parsedURL.path = parsedURL.protocol
                 .concat('//')
                 .concat(target.host)
@@ -90,7 +90,7 @@ export default function fetch(url, options) {
         }
         return nodeFetch(parsedURL, {
             ...options,
-            agent: buildTunnel(proxyurl, AgentOptions) || chooseAgent(parsedURL, AgentOptions),
+            agent: buildTunnel(parsedProxyURL, AgentOptions) || chooseAgent(parsedURL, AgentOptions),
         });
     }
     return nodeFetch(parsedURL, {
