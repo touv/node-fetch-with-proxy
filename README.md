@@ -1,11 +1,11 @@
-# Use isomorphic fetch behind a proxy 
+# Use fetch behind a proxy 
 
 
-A wrapper of [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch) that can be use behind a proxy.
+A wrapper of fetch that can be use behind a proxy.
 
 It detect standard environment variables (HTTP_PROXY, https_proxy, etc.) to choose and use the proxy.
 
-Unlike many similar packages, this one does not use tunnel in HTTP, like [request](https://github.com/request/request), like browsers.
+Unlike many similar packages, this one does **not use tunnel** in HTTP, like [request](https://github.com/request/request), like browsers.
 
 
 # Example
