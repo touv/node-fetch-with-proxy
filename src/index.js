@@ -4,6 +4,9 @@ import { parse } from 'url';
 import http from 'http';
 import https from 'https';
 import tunnelAgent from 'tunnel-agent';
+import AbortController from 'node-abort-controller'
+ 
+
 
 const DefaultOptions = {
     keepAlive: true,
@@ -84,12 +87,15 @@ export default function fetch(url, options) {
     } else {
         agent = chooseAgent(parsedURL, AgentOptions);
     }
-    if (opts.signal) {
-        opts.signal.addEventListener('abort', () => {
-            agent.destroy();
-            agent = null;
-        });
+    if (!opts.signal) {
+        const controller = new AbortController();
+        opts.signal = controller.signal;
     }
+    opts.signal.addEventListener('abort', () => {
+        agent.destroy();
+        agent = null;
+    });
+
     return nodeFetch(parsedURL, {
         ...options,
         agent,
