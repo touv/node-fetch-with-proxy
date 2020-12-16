@@ -74,13 +74,13 @@ export default function fetch(url, options) {
         if (parsedProxyURL.tunnelMethod.startsWith('httpOver')) {
             parsedURL.path = parsedURL.protocol
                 .concat('//')
-                .concat(target.host)
-                .concat(target.path);
-            parsedURL.port = proxyurl.port;
-            parsedURL.host = proxyurl.host;
-            parsedURL.hostname = proxy.hostname;
-            parsedURL.auth = proxy.auth;
-            agent = chooseAgent(target, AgentOptions);
+                .concat(parsedURL.host)
+                .concat(parsedURL.path);
+            parsedURL.port = parsedProxyURL.port;
+            parsedURL.host = parsedProxyURL.host;
+            parsedURL.hostname = parsedProxyURL.hostname;
+            parsedURL.auth = parsedProxyURL.auth;
+            agent = chooseAgent(parsedURL, AgentOptions);
         } else {
             agent = buildTunnel(parsedProxyURL, AgentOptions) || chooseAgent(parsedURL, AgentOptions);
         }
@@ -92,7 +92,9 @@ export default function fetch(url, options) {
         opts.signal = controller.signal;
     }
     opts.signal.addEventListener('abort', () => {
-        agent.destroy();
+	if (agent.destroy) {
+        	agent.destroy();
+	}
         agent = null;
     });
 
